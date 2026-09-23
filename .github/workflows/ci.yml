@@ -16,13 +16,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build and test
-        run: ./gradlew check --no-daemon
-      - name: Build asciidoctor docs
-        if: github.ref == 'refs/heads/main'
-        run: ./gradlew asciidoctor --no-daemon
-      - name: Upload docs artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+      - name: Build, test, and generate coverage report
+        run: ./gradlew check jacocoTestReport --no-daemon
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          path: build/docs/asciidoctor
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: false
