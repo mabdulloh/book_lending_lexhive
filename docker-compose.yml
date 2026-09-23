@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Database Service (PostgreSQL 16 Alpine)
+  # ============================================================================
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: spring-postgres-db
+    environment:
+      POSTGRES_USER: book_lending_user
+      POSTGRES_PASSWORD: book_lending_password
+      POSTGRES_DB: book_lending
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U book_lending_user -d book_lending"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Application Service (Your Spring Boot App)
+  # ============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-boot-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/book_lending
+      SPRING_DATASOURCE_USERNAME: book_lending_user
+      SPRING_DATASOURCE_PASSWORD: book_lending_password
+      JWT_SECRET: ${JWT_SECRET:-please-override-with-a-real-32-plus-char-secret}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123}
+      SEED_MEMBER_PASSWORD: ${SEED_MEMBER_PASSWORD:-member123}
+
+# Persistent volume definition so database data isn't lost when containers stop
+volumes:
+  postgres_data:
