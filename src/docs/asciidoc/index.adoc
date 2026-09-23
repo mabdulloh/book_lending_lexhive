@@ -1,7 +1,7 @@
 = Book Lending API
-:revnumber: {project-version}
-:revdate: {docdate}
-:snippets: {builddir}/generated-snippets
+:revnumber: {revnumber}
+:revdate: {revdate}
+:snippets: {snippets}
 :source-highlighter: highlightjs
 
 Reference documentation generated from Spring REST Docs.
