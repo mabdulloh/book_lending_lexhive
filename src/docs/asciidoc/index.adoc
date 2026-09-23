@@ -1,0 +1,154 @@
+= Book Lending API
+:revnumber: {revnumber}
+:revdate: {revdate}
+:snippets: {docdir}/snippets
+:source-highlighter: highlightjs
+
+Reference documentation generated from Spring REST Docs.
+
+== Authentication
+
+All endpoints (except `/api/v1/auth/login`) require a Bearer JWT in the `Authorization` header.
+Obtain a token via the login endpoint below. Roles in claims: `ADMIN`, `MEMBER`.
+
+== Login
+
+Obtain a JWT.
+
+include::{snippets}/auth/login/curl-request.adoc[]
+
+=== Request fields
+
+include::{snippets}/auth/login/request-fields.adoc[]
+
+=== Response fields
+
+include::{snippets}/auth/login/response-fields.adoc[]
+
+=== Example response
+
+include::{snippets}/auth/login/http-response.adoc[]
+
+== Books
+
+=== Create book
+
+include::{snippets}/books/create/curl-request.adoc[]
+
+include::{snippets}/books/create/request-fields.adoc[]
+
+include::{snippets}/books/create/http-response.adoc[]
+
+include::{snippets}/books/create/response-fields.adoc[]
+
+=== List books
+
+include::{snippets}/books/list/curl-request.adoc[]
+
+include::{snippets}/books/list/http-response.adoc[]
+
+=== Get book by UUID
+
+include::{snippets}/books/get/curl-request.adoc[]
+
+include::{snippets}/books/get/http-response.adoc[]
+
+include::{snippets}/books/get/response-fields.adoc[]
+
+=== Update book
+
+include::{snippets}/books/update/curl-request.adoc[]
+
+include::{snippets}/books/update/request-fields.adoc[]
+
+include::{snippets}/books/update/http-response.adoc[]
+
+=== Delete book (soft delete)
+
+include::{snippets}/books/delete/curl-request.adoc[]
+
+include::{snippets}/books/delete/http-response.adoc[]
+
+== Members
+
+=== Create member
+
+include::{snippets}/members/create/curl-request.adoc[]
+
+include::{snippets}/members/create/request-fields.adoc[]
+
+include::{snippets}/members/create/http-response.adoc[]
+
+include::{snippets}/members/create/response-fields.adoc[]
+
+=== List members
+
+include::{snippets}/members/list/curl-request.adoc[]
+
+include::{snippets}/members/list/http-response.adoc[]
+
+=== Get member by UUID
+
+include::{snippets}/members/get/curl-request.adoc[]
+
+include::{snippets}/members/get/http-response.adoc[]
+
+=== Delete member (soft delete)
+
+include::{snippets}/members/delete/curl-request.adoc[]
+
+include::{snippets}/members/delete/http-response.adoc[]
+
+== Loans
+
+=== Borrow book
+
+include::{snippets}/loans/borrow/curl-request.adoc[]
+
+include::{snippets}/loans/borrow/request-fields.adoc[]
+
+include::{snippets}/loans/borrow/http-response.adoc[]
+
+include::{snippets}/loans/borrow/response-fields.adoc[]
+
+=== Return loan
+
+include::{snippets}/loans/return/curl-request.adoc[]
+
+include::{snippets}/loans/return/http-response.adoc[]
+
+=== List loans by member
+
+include::{snippets}/loans/list/curl-request.adoc[]
+
+include::{snippets}/loans/list/http-response.adoc[]
+
+=== List overdue loans
+
+include::{snippets}/loans/overdue/curl-request.adoc[]
+
+include::{snippets}/loans/overdue/http-response.adoc[]
+
+== Running
+
+=== Local
+
+[source,bash]
+----
+docker compose up -d
+./gradlew bootRun
+----
+
+API: http://localhost:8080
+
+Swagger UI: http://localhost:8080/swagger-ui.html
+
+=== Default users
+
+[cols="1,1,1"]
+|===
+| Username | Password | Role
+
+| admin | admin123 | ADMIN
+| member@example.com | member123 | MEMBER
+|===

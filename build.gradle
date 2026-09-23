@@ -81,6 +81,14 @@ tasks.named('test') {
     systemProperty 'api.version', '1.43'
 }
 
+tasks.register('copySnippets', Copy) {
+    from layout.buildDirectory.dir('generated-snippets')
+    into layout.projectDirectory.dir('src/docs/asciidoc/snippets')
+    doFirst {
+        delete layout.projectDirectory.dir('src/docs/asciidoc/snippets')
+    }
+}
+
 asciidoctor {
     sourceDir = file("${projectDir}/src/docs/asciidoc")
     sources {
@@ -90,9 +98,9 @@ asciidoctor {
     attributes([
         revnumber: project.version,
         revdate: new Date().format('yyyy-MM-dd'),
-        snippets: file("${buildDir}/generated-snippets"),
         sourceHighlighter: 'highlightjs'
     ])
+    dependsOn copySnippets
 }
 
 tasks.register('asciidoctorFull') {

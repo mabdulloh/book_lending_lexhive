@@ -24,7 +24,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Build docs
-        run: ./gradlew asciidoctorFull --no-daemon
+        run: ./gradlew clean asciidoctorFull --no-daemon
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

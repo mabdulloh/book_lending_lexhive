@@ -127,10 +127,9 @@ App boots on `http://localhost:8080`. Default users seeded on startup:
 
 ```bash
 ./gradlew test                   # all unit + integration tests
-./gradlew asciidoctorFull        # tests + generates docs/build/docs/asciidoctor
 ```
 
-Tests use Testcontainers Postgres for integration. Service tests use Mockito + AssertJ (no Spring context).
+Tests use Testcontainers Postgres for integration. Service tests use Mockito + AssertJ.
 
 ## API Reference
 
