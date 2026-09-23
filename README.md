@@ -7,15 +7,15 @@ REST microservice for managing a book catalog, library members, and loans. Built
 
 ## Tech Stack
 
-- **Language**: Java 17 LTS (records for DTOs)
+- **Language**: Java 17
 - **Framework**: Spring Boot 3.4
-- **Build**: Gradle (Groovy DSL)
+- **Build**: Gradle 
 - **Persistence**: Spring Data JPA + Hibernate, PostgreSQL 16
 - **Migration**: Flyway
 - **Validation**: Jakarta Validation (Hibernate Validator)
 - **Security**: Spring Security with method-level authorization + JWT 
 - **Observability**: Spring Boot Actuator (`/actuator/health`)
-- **Documentation**: Spring REST Docs + Asciidoctor → GitHub Pages
+- **Documentation**: SwaggerUI (`/swagger-ui.html`)
 - **Lombok**: `@Getter`, `@Setter`, `@RequiredArgsConstructor`, `@Slf4j` only
 - **Testing**: JUnit 5, Mockito, Testcontainers
 
@@ -34,46 +34,46 @@ Base path: `/api/v1`. JWT Bearer required for all endpoints except `/auth/login`
 
 ### Auth
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
+| Method | Path                 | Auth | Body                   | Response  |
+|--------|----------------------|------|------------------------|-----------|
 | `POST` | `/api/v1/auth/login` | none | `{username, password}` | `{token}` |
 
 ### Books
 
-| Method | Path | Role | Body |
-|--------|------|------|------|
-| `POST` | `/api/v1/books` | ADMIN | `{title, author, isbn, totalCopies}` |
-| `GET` | `/api/v1/books` | ADMIN, MEMBER | — |
-| `GET` | `/api/v1/books/{uuid}` | ADMIN, MEMBER | — |
-| `PUT` | `/api/v1/books/{uuid}` | ADMIN | `{title?, author?, totalCopies?}` |
-| `DELETE` | `/api/v1/books/{uuid}` | ADMIN | — |
+| Method   | Path                   | Role          | Body                                 |
+|----------|------------------------|---------------|--------------------------------------|
+| `POST`   | `/api/v1/books`        | ADMIN         | `{title, author, isbn, totalCopies}` |
+| `GET`    | `/api/v1/books`        | ADMIN, MEMBER | —                                    |
+| `GET`    | `/api/v1/books/{uuid}` | ADMIN, MEMBER | —                                    |
+| `PUT`    | `/api/v1/books/{uuid}` | ADMIN         | `{title?, author?, totalCopies?}`    |
+| `DELETE` | `/api/v1/books/{uuid}` | ADMIN         | —                                    |
 
 ### Members
 
-| Method | Path | Role | Body |
-|--------|------|------|------|
-| `POST` | `/api/v1/members` | ADMIN | `{name, email, password}` |
-| `GET` | `/api/v1/members` | ADMIN | — |
-| `GET` | `/api/v1/members/{uuid}` | ADMIN, self | — |
-| `DELETE` | `/api/v1/members/{uuid}` | ADMIN | — |
+| Method   | Path                     | Role        | Body                      |
+|----------|--------------------------|-------------|---------------------------|
+| `POST`   | `/api/v1/members`        | ADMIN       | `{name, email, password}` |
+| `GET`    | `/api/v1/members`        | ADMIN       | —                         |
+| `GET`    | `/api/v1/members/{uuid}` | ADMIN, self | —                         |
+| `DELETE` | `/api/v1/members/{uuid}` | ADMIN       | —                         |
 
 ### Loans
 
-| Method | Path | Role | Body / Query | Notes |
-|--------|------|------|--------------|-------|
-| `POST` | `/api/v1/loans` | MEMBER | `{bookUuid, memberUuid}` | Borrowing rules enforced |
-| `POST` | `/api/v1/loans/{uuid}/return` | ADMIN, MEMBER | — | Member must own loan (else 403) |
-| `GET` | `/api/v1/loans?memberId={uuid}` | ADMIN, MEMBER | — | Filter by member |
-| `GET` | `/api/v1/loans/overdue` | ADMIN | — | Returns overdue loans |
+| Method | Path                            | Role          | Body / Query             | Notes                           |
+|--------|---------------------------------|---------------|--------------------------|---------------------------------|
+| `POST` | `/api/v1/loans`                 | MEMBER        | `{bookUuid, memberUuid}` | Borrowing rules enforced        |
+| `POST` | `/api/v1/loans/{uuid}/return`   | ADMIN, MEMBER | —                        | Member must own loan (else 403) |
+| `GET`  | `/api/v1/loans?memberId={uuid}` | ADMIN, MEMBER | —                        | Filter by member                |
+| `GET`  | `/api/v1/loans/overdue`         | ADMIN         | —                        | Returns overdue loans           |
 
 ## Borrowing Rules
 
 Configurable in `application.yaml` under `app.borrowing`:
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `max-active-loans-per-member` | `3` | Max open loans per member |
-| `loan-duration-days` | `14` | Due date = `borrowedAt + N days` |
+| Key                           | Default | Description                      |
+|-------------------------------|---------|----------------------------------|
+| `max-active-loans-per-member` | `3`     | Max open loans per member        |
+| `loan-duration-days`          | `14`    | Due date = `borrowedAt + N days` |
 
 **Rules enforced**:
 
@@ -107,7 +107,7 @@ curl http://localhost:8080/actuator/health
 
 ## Local Development (without Docker)
 
-Requires Java 17, PostgreSQL 16 reachable.
+Requires Java 17+.
 
 ```bash
 # Start Postgres
@@ -119,9 +119,9 @@ docker compose up -d postgres-db
 
 App boots on `http://localhost:8080`. Default users seeded on startup:
 
-| Username | Password | Role |
-|----------|----------|------|
-| `admin` | `admin123` | ADMIN |
+| Username             | Password    | Role   |
+|----------------------|-------------|--------|
+| `admin`              | `admin123`  | ADMIN  |
 | `member@example.com` | `member123` | MEMBER |
 
 ## Testing
@@ -130,11 +130,11 @@ App boots on `http://localhost:8080`. Default users seeded on startup:
 ./gradlew test                   # all unit + integration tests
 ```
 
-Tests use Testcontainers Postgres for integration. Service tests use Mockito + AssertJ.
+Tests consist of unit test and integration test using TestContainers.
 
 ## API Reference
 
-Interactive Swagger UI is served at runtime when the app is running:
+Interactive Swagger UI can be accessed when the app is running:
 
 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
@@ -155,11 +155,10 @@ src/
 │   │   ├── repository/  # Spring Data JPA repositories
 │   │   ├── security/    # JWT service + filter
 │   │   └── service/     # Business logic
-│   └── resources/
+│   └─ resources/
 │       ├── application.yaml
 │       └── db/migration/V1_20260923_initial_schema.sql
-├── test/
-│   ├── java/            # Service tests + controller integration + REST docs
-│   └── resources/application-test.yml
-└── docs/asciidoc/       # REST Docs snippets source + index.adoc
+└── test/
+    ├─ java/            # Service tests + controller integration + REST docs
+    └─ resources/application-test.yml
 ```

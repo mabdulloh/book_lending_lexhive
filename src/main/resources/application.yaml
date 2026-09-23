@@ -36,3 +36,7 @@ app:
 springdoc:
   swagger-ui:
     tagsSorter: alpha
+
+management:
+  endpoint:
+    health.show-details: always
