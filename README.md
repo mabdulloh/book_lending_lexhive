@@ -1,8 +1,9 @@
 # Book Lending Microservice
 
-[![CI](https://github.com/mabdulloh/book-lending-lexhive/actions/workflows/ci.yml/badge.svg)](https://github.com/mabdulloh/book-lending-lexhive/actions/workflows/ci.yml)
+[![CI](https://github.com/mabdulloh/book_lending_lexhive/actions/workflows/ci.yml/badge.svg)](https://github.com/mabdulloh/book_lending_lexhive/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/mabdulloh/book_lending_lexhive/graph/badge.svg)](https://codecov.io/gh/mabdulloh/book_lending_lexhive)
 
-REST microservice for managing a book catalog, library members, and loans. Built with Spring Boot 3.4 + Java 17, secured with JWT, persisted to PostgreSQL via Flyway, documented with Spring REST Docs + Asciidoctor, deployed as docs to GitHub Pages.
+REST microservice for managing a book catalog, library members, and loans. Built with Spring Boot 3.4 + Java 17, secured with JWT, persisted to PostgreSQL via Flyway, and exposed via Swagger UI at runtime.
 
 ## Tech Stack
 
@@ -133,16 +134,11 @@ Tests use Testcontainers Postgres for integration. Service tests use Mockito + A
 
 ## API Reference
 
-Full reference generated from Spring REST Docs:
+Interactive Swagger UI is served at runtime when the app is running:
 
-[mabdulloh.github.io/book-lending-lexhive](https://mabdulloh.github.io/book-lending-lexhive/)
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-Regenerate locally:
-
-```bash
-./gradlew asciidoctorFull
-# open build/docs/asciidoctor/index.html
-```
+Click **Authorize** (top right) and paste a JWT obtained from `POST /api/v1/auth/login` to explore protected endpoints.
 
 ## Project Layout
 
