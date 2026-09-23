@@ -5,6 +5,7 @@ on:
     branches: [main]
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -15,9 +16,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -26,7 +24,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Build docs
-        run: ./gradlew asciidoctor --no-daemon
+        run: ./gradlew asciidoctorFull --no-daemon
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
