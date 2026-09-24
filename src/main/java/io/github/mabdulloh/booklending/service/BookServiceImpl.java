@@ -29,7 +29,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public BookResponse create(CreateBookRequest req) {
         log.info("Creating book isbn: {}", req.isbn());
-        if (bookRepository.existsByIsbnAndDeletedAtIsNull(req.isbn())) {
+        if (bookRepository.existsByIsbn(req.isbn())) {
             log.info("Book with isbn {} already exists", req.isbn());
             throw new DuplicateIsbnException(req.isbn());
         }
@@ -50,7 +50,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public List<BookResponse> list() {
-        return bookRepository.findAllActive().stream()
+        return bookRepository.findAll().stream()
                 .map(BookResponse::from)
                 .toList();
     }

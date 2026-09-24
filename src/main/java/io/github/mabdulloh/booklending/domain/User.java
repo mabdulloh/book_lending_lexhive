@@ -3,14 +3,16 @@ package io.github.mabdulloh.booklending.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
+@Table(name = "users")
+@SQLRestriction("deleted_at IS NULL")
 public class User {
 
     @Id
@@ -30,7 +32,7 @@ public class User {
     private String role;
 
     @OneToOne
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id")
     private Member member;
 
     @Column(name = "deleted_at")

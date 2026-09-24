@@ -28,7 +28,7 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedUser(String username, String password, String role) {
-        if (userRepository.findByUsernameAndDeletedAtIsNull(username).isPresent()) {
+        if (userRepository.findByUsername(username).isPresent()) {
             return;
         }
         User user = new User();

@@ -55,7 +55,7 @@ class BookServiceTest {
     @Test
     @DisplayName("create - success - availableCopies equals totalCopies")
     void create_success() {
-        when(bookRepository.existsByIsbnAndDeletedAtIsNull("999")).thenReturn(false);
+        when(bookRepository.existsByIsbn("999")).thenReturn(false);
         when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
 
         var resp = bookService.create(new CreateBookRequest("T", "A", "999", 4));
@@ -72,7 +72,7 @@ class BookServiceTest {
     @Test
     @DisplayName("create - duplicate isbn throws DuplicateIsbnException")
     void create_duplicateIsbn() {
-        when(bookRepository.existsByIsbnAndDeletedAtIsNull("123")).thenReturn(true);
+        when(bookRepository.existsByIsbn("123")).thenReturn(true);
 
         assertThatThrownBy(() -> bookService.create(new CreateBookRequest("T", "A", "123", 1)))
                 .isInstanceOf(DuplicateIsbnException.class);
@@ -103,7 +103,7 @@ class BookServiceTest {
     @Test
     @DisplayName("list - returns mapped responses")
     void list_ok() {
-        when(bookRepository.findAllActive()).thenReturn(List.of(existing));
+        when(bookRepository.findAll()).thenReturn(List.of(existing));
 
         var list = bookService.list();
 

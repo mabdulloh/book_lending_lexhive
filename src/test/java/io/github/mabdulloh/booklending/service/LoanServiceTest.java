@@ -219,7 +219,7 @@ class LoanServiceTest {
         User linkedUser = new User();
         linkedUser.setId(99L);
         linkedUser.setMember(member);
-        when(userRepository.findByUsernameAndDeletedAtIsNull("member-owner")).thenReturn(Optional.of(linkedUser));
+        when(userRepository.findByUsername("member-owner")).thenReturn(Optional.of(linkedUser));
         when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
 
         var resp = loanService.returnLoan(loanUuid);
@@ -246,7 +246,7 @@ class LoanServiceTest {
         User stranger = new User();
         stranger.setId(100L);
         stranger.setMember(null);
-        when(userRepository.findByUsernameAndDeletedAtIsNull("member-stranger")).thenReturn(Optional.of(stranger));
+        when(userRepository.findByUsername("member-stranger")).thenReturn(Optional.of(stranger));
         when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
 
         assertThatThrownBy(() -> loanService.returnLoan(loanUuid))
@@ -268,7 +268,7 @@ class LoanServiceTest {
 
         setAuth("orphan-user", "ROLE_MEMBER");
 
-        when(userRepository.findByUsernameAndDeletedAtIsNull("orphan-user")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("orphan-user")).thenReturn(Optional.empty());
         when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
 
         assertThatThrownBy(() -> loanService.returnLoan(loanUuid))
@@ -296,7 +296,7 @@ class LoanServiceTest {
 
         assertThat(resp.returnedAt()).isNotNull();
         assertThat(book.getAvailableCopies()).isEqualTo(3);
-        verify(userRepository, never()).findByUsernameAndDeletedAtIsNull(any());
+        verify(userRepository, never()).findByUsername(any());
     }
 
     @Test

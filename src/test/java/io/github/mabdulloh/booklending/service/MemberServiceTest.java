@@ -54,8 +54,8 @@ class MemberServiceTest {
     @Test
     @DisplayName("create - success - member and user linked via memberId")
     void create_success() {
-        when(memberRepository.existsByEmailAndDeletedAtIsNull("bob@example.com")).thenReturn(false);
-        when(userRepository.findByUsernameAndDeletedAtIsNull("bob@example.com")).thenReturn(Optional.empty());
+        when(memberRepository.existsByEmail("bob@example.com")).thenReturn(false);
+        when(userRepository.findByUsername("bob@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("secret123")).thenReturn("hashed");
         when(memberRepository.save(any(Member.class))).thenAnswer(inv -> {
             Member m = inv.getArgument(0);
@@ -85,7 +85,7 @@ class MemberServiceTest {
     @Test
     @DisplayName("create - duplicate email throws DuplicateEmailException")
     void create_duplicateEmail() {
-        when(memberRepository.existsByEmailAndDeletedAtIsNull("alice@example.com")).thenReturn(true);
+        when(memberRepository.existsByEmail("alice@example.com")).thenReturn(true);
 
         assertThatThrownBy(() -> memberService.create(new CreateMemberRequest("Alice", "alice@example.com", "secret123")))
                 .isInstanceOf(DuplicateEmailException.class);
@@ -117,7 +117,7 @@ class MemberServiceTest {
     @Test
     @DisplayName("list - returns mapped responses")
     void list_ok() {
-        when(memberRepository.findAllActive()).thenReturn(List.of(existing));
+        when(memberRepository.findAll()).thenReturn(List.of(existing));
 
         var list = memberService.list();
 
@@ -150,7 +150,7 @@ class MemberServiceTest {
 
         when(memberRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
         when(memberRepository.save(any(Member.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userRepository.findByMemberIdAndDeletedAtIsNull(42L)).thenReturn(Optional.of(linkedUser));
+        when(userRepository.findByMemberId(42L)).thenReturn(Optional.of(linkedUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         memberService.delete(uuid);

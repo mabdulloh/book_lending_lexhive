@@ -33,10 +33,10 @@ public class MemberSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (memberRepository.existsByEmailAndDeletedAtIsNull(memberEmail)) {
+        if (memberRepository.existsByEmail(memberEmail)) {
             return;
         }
-        if (userRepository.findByUsernameAndDeletedAtIsNull(memberEmail).isPresent()) {
+        if (userRepository.findByUsername(memberEmail).isPresent()) {
             return;
         }
 

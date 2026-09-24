@@ -3,14 +3,16 @@ package io.github.mabdulloh.booklending.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "books")
 @Getter
 @Setter
+@Table(name = "books")
+@SQLRestriction("deleted_at IS NULL")
 public class Book {
 
     @Id

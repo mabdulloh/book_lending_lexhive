@@ -16,15 +16,16 @@ import java.util.List;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private static final String ROLE = "ROLE_";
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findByUsernameAndDeletedAtIsNull(username)
+        var user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("user not found: " + username));
 
         return User.withUsername(user.getUsername())
                 .password(user.getPasswordHash())
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())))
+                .authorities(List.of(new SimpleGrantedAuthority(ROLE + user.getRole())))
                 .build();
     }
 }

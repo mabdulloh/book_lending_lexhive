@@ -31,11 +31,11 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     public MemberResponse create(CreateMemberRequest req) {
-        if (memberRepository.existsByEmailAndDeletedAtIsNull(req.email())) {
+        if (memberRepository.existsByEmail(req.email())) {
             log.info("Duplicate member email: {}", req.email());
             throw new DuplicateEmailException(req.email());
         }
-        if (userRepository.findByUsernameAndDeletedAtIsNull(req.email()).isPresent()) {
+        if (userRepository.findByUsername(req.email()).isPresent()) {
             log.info("Username already taken: {}", req.email());
             throw new DuplicateEmailException(req.email());
         }
@@ -66,7 +66,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public List<MemberResponse> list() {
-        return memberRepository.findAllActive().stream()
+        return memberRepository.findAll().stream()
                 .map(MemberResponse::from)
                 .toList();
     }
@@ -77,7 +77,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = findActiveByUuid(uuid);
         member.setDeletedAt(Instant.now());
         memberRepository.save(member);
-        userRepository.findByMemberIdAndDeletedAtIsNull(member.getId()).ifPresent(u -> {
+        userRepository.findByMemberId(member.getId()).ifPresent(u -> {
             u.setDeletedAt(Instant.now());
             userRepository.save(u);
         });

@@ -144,7 +144,7 @@ public class LoanServiceImpl implements LoanService, BorrowingRulesService {
     private boolean isLoanOwner(Loan loan) {
         String username = currentUsername();
         if (username == null) return false;
-        return userRepository.findByUsernameAndDeletedAtIsNull(username)
+        return userRepository.findByUsername(username)
                 .map(u -> loan.getMember().equals(u.getMember()))
                 .orElse(false);
     }
