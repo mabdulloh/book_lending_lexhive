@@ -3,7 +3,7 @@ package io.github.mabdulloh.booklending.service;
 import io.github.mabdulloh.booklending.domain.Book;
 import io.github.mabdulloh.booklending.dto.book.CreateBookRequest;
 import io.github.mabdulloh.booklending.dto.book.UpdateBookRequest;
-import io.github.mabdulloh.booklending.exception.DuplicateIsbnException;
+import io.github.mabdulloh.booklending.exception.ConflictException;
 import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
 import io.github.mabdulloh.booklending.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,12 +70,12 @@ class BookServiceTest {
     }
 
     @Test
-    @DisplayName("create - duplicate isbn throws DuplicateIsbnException")
+    @DisplayName("create - duplicate isbn throws ConflictException")
     void create_duplicateIsbn() {
         when(bookRepository.existsByIsbn("123")).thenReturn(true);
 
         assertThatThrownBy(() -> bookService.create(new CreateBookRequest("T", "A", "123", 1)))
-                .isInstanceOf(DuplicateIsbnException.class);
+                .isInstanceOf(ConflictException.class);
 
         verify(bookRepository, never()).save(any());
     }

@@ -3,7 +3,7 @@ package io.github.mabdulloh.booklending.service;
 import io.github.mabdulloh.booklending.domain.Member;
 import io.github.mabdulloh.booklending.domain.User;
 import io.github.mabdulloh.booklending.dto.member.CreateMemberRequest;
-import io.github.mabdulloh.booklending.exception.DuplicateEmailException;
+import io.github.mabdulloh.booklending.exception.ConflictException;
 import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
 import io.github.mabdulloh.booklending.repository.MemberRepository;
 import io.github.mabdulloh.booklending.repository.UserRepository;
@@ -83,12 +83,12 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("create - duplicate email throws DuplicateEmailException")
+    @DisplayName("create - duplicate email throws ConflictException")
     void create_duplicateEmail() {
         when(memberRepository.existsByEmail("alice@example.com")).thenReturn(true);
 
         assertThatThrownBy(() -> memberService.create(new CreateMemberRequest("Alice", "alice@example.com", "secret123")))
-                .isInstanceOf(DuplicateEmailException.class);
+                .isInstanceOf(ConflictException.class);
 
         verify(memberRepository, never()).save(any());
         verify(userRepository, never()).save(any());

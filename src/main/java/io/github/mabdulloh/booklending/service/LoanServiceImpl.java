@@ -6,11 +6,9 @@ import io.github.mabdulloh.booklending.domain.Loan;
 import io.github.mabdulloh.booklending.domain.Member;
 import io.github.mabdulloh.booklending.dto.loan.BorrowRequest;
 import io.github.mabdulloh.booklending.dto.loan.LoanResponse;
-import io.github.mabdulloh.booklending.exception.BookUnavailableException;
+import io.github.mabdulloh.booklending.exception.BusinessRuleException;
 import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
 import io.github.mabdulloh.booklending.exception.LoanOwnershipException;
-import io.github.mabdulloh.booklending.exception.MaxActiveLoansExceededException;
-import io.github.mabdulloh.booklending.exception.MemberHasOverdueLoanException;
 import io.github.mabdulloh.booklending.repository.LoanRepository;
 import io.github.mabdulloh.booklending.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LoanServiceImpl implements LoanService, BorrowingRulesService {
+public class LoanServiceImpl implements LoanService {
 
     private final LoanRepository loanRepository;
     private final BookService bookService;
@@ -109,22 +107,22 @@ public class LoanServiceImpl implements LoanService, BorrowingRulesService {
     public void validateCanBorrow(UUID memberUuid) {
         long active = loanRepository.countActiveByMemberUuid(memberUuid);
         if (active >= rulesConfig.getMaxActiveLoansPerMember()) {
-            throw new MaxActiveLoansExceededException(memberUuid, rulesConfig.getMaxActiveLoansPerMember());
+            throw new BusinessRuleException("Member " + memberUuid
+                    + " reached max active loans: " + rulesConfig.getMaxActiveLoansPerMember());
         }
         List<Loan> overdue = loanRepository.findOverdueByMember(memberUuid, Instant.now());
         if (!overdue.isEmpty()) {
-            throw new MemberHasOverdueLoanException(memberUuid);
+            throw new BusinessRuleException("Member " + memberUuid + " has overdue loans");
         }
     }
 
-    @Override
-    public Duration loanDuration() {
-        return Duration.ofDays(rulesConfig.getLoanDurationDays());
+    private Instant computeDueDate(Instant borrowedAt) {
+        return borrowedAt.plus(Duration.ofDays(rulesConfig.getLoanDurationDays()));
     }
 
     private void validateBookAvailable(Book book) {
         if (book.getAvailableCopies() <= 0) {
-            throw new BookUnavailableException(book.getUuid());
+            throw new BusinessRuleException("No available copies for book: " + book.getUuid());
         }
     }
 
