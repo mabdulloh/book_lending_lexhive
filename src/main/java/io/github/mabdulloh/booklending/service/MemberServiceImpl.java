@@ -52,7 +52,7 @@ public class MemberServiceImpl implements MemberService {
         user.setUsername(req.email());
         user.setPasswordHash(passwordEncoder.encode(req.password()));
         user.setRole("MEMBER");
-        user.setMemberId(member.getId());
+        user.setMember(member);
         userRepository.save(user);
         log.info("Created user linked to member id={}", member.getId());
 

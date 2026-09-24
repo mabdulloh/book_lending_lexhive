@@ -29,8 +29,9 @@ public class User {
     @Column(nullable = false)
     private String role;
 
-    @Column(name = "member_id")
-    private Long memberId;
+    @OneToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;

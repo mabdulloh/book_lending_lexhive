@@ -1,16 +1,22 @@
 package io.github.mabdulloh.booklending.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.mabdulloh.booklending.domain.Member;
+import io.github.mabdulloh.booklending.domain.User;
 import io.github.mabdulloh.booklending.dto.book.CreateBookRequest;
 import io.github.mabdulloh.booklending.dto.loan.BorrowRequest;
 import io.github.mabdulloh.booklending.dto.member.CreateMemberRequest;
+import io.github.mabdulloh.booklending.repository.MemberRepository;
+import io.github.mabdulloh.booklending.repository.UserRepository;
 import io.github.mabdulloh.booklending.support.IntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.UUID;
 
@@ -25,6 +31,8 @@ class LoanControllerIntegrationTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper om;
+    @Autowired private MemberRepository memberRepo;
+    @Autowired private UserRepository userRepo;
 
     @Test
     @DisplayName("borrow - member - 201, then return 200, availableCopies restored")
@@ -44,7 +52,7 @@ class LoanControllerIntegrationTest {
         UUID loanUuid = UUID.fromString(om.readTree(loanJson).get("uuid").asText());
 
         mvc.perform(post("/api/v1/loans/{uuid}/return", loanUuid)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
+                        .with(SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.returnedAt").exists());
@@ -126,10 +134,79 @@ class LoanControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("return - admin can return anyone's loan")
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void return_adminAnyLoan() throws Exception {
+        UUID bookUuid = createBook("9780132350990", 1);
+        UUID memberUuid = createMember("alice@example.com");
+
+        RequestPostProcessor asMember = SecurityMockMvcRequestPostProcessors
+                .user("alice-borrower").roles("MEMBER");
+
+        String loanJson = mvc.perform(post("/api/v1/loans").with(csrf()).with(asMember)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(new BorrowRequest(bookUuid, memberUuid))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID loanUuid = UUID.fromString(om.readTree(loanJson).get("uuid").asText());
+
+        mvc.perform(post("/api/v1/loans/{uuid}/return", loanUuid).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnedAt").exists());
+
+        mvc.perform(get("/api/v1/books/{uuid}", bookUuid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.availableCopies").value(1));
+    }
+
+    @Test
+    @DisplayName("return - MEMBER with linked user can return own loan")
+    @WithMockUser(username = "linked-member-test", roles = "MEMBER")
+    void return_memberOwnLoan() throws Exception {
+        UUID bookUuid = createBook("9780132350991", 1);
+        UUID memberUuid = createMember("borrower-linked@example.com");
+
+        RequestPostProcessor asMember = SecurityMockMvcRequestPostProcessors
+                .user("borrower-linked@example.com").roles("MEMBER");
+
+        String loanJson = mvc.perform(post("/api/v1/loans").with(csrf()).with(asMember)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(new BorrowRequest(bookUuid, memberUuid))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID loanUuid = UUID.fromString(om.readTree(loanJson).get("uuid").asText());
+
+        mvc.perform(post("/api/v1/loans/{uuid}/return", loanUuid).with(csrf()).with(asMember))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnedAt").exists());
+    }
+
+    @Test
+    @DisplayName("return - MEMBER with no linked user (orphan) gets 403")
+    @WithMockUser(username = "orphan-member", roles = "MEMBER")
+    void return_orphanMember403() throws Exception {
+        UUID bookUuid = createBook("9780132350992", 1);
+        UUID memberUuid = createMember("orphan-test@example.com");
+
+        RequestPostProcessor asMember = SecurityMockMvcRequestPostProcessors
+                .user("orphan-borrower").roles("MEMBER");
+
+        String loanJson = mvc.perform(post("/api/v1/loans").with(csrf()).with(asMember)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(new BorrowRequest(bookUuid, memberUuid))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID loanUuid = UUID.fromString(om.readTree(loanJson).get("uuid").asText());
+
+        mvc.perform(post("/api/v1/loans/{uuid}/return", loanUuid).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
     private UUID createBook(String isbn, int copies) throws Exception {
         var req = new CreateBookRequest("The Technological Republic", "Alexander C Karp", isbn, copies);
         String json = mvc.perform(post("/api/v1/books").with(csrf())
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
+                        .with(SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
@@ -139,7 +216,7 @@ class LoanControllerIntegrationTest {
     private UUID createMember(String email) throws Exception {
         var req = new CreateMemberRequest("Jonathan Pierce", email, "jon12345");
         String json = mvc.perform(post("/api/v1/members").with(csrf())
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
+                        .with(SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();

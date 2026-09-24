@@ -29,7 +29,7 @@ class MemberControllerIntegrationTest {
     @DisplayName("create - admin - 201")
     @WithMockUser(username = "admin", roles = "ADMIN")
     void create_admin_ok() throws Exception {
-        var req = new CreateMemberRequest("Alice", "alice@example.com", "alice12345");
+        var req = new CreateMemberRequest("Phil Collins", "phil@example.com", "phil12345");
         mvc.perform(post("/api/v1/members").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))

@@ -209,7 +209,6 @@ class ApiDocumentationTest {
     }
 
     @Test
-    //@Disabled("ownership check requires linked user, not yet linked in seed")
     void loans_return() throws Exception {
         UUID bookUuid = createBook("9780132350889", 2);
         UUID memberUuid = createMember("returner@example.com");

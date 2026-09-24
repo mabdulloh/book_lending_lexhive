@@ -163,6 +163,77 @@ class BookServiceTest {
     }
 
     @Test
+    @DisplayName("update - totalCopies only - title and author unchanged")
+    void update_totalCopiesOnly_keepsOtherFields() {
+        when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookService.update(uuid, new UpdateBookRequest(null, null, 5));
+
+        assertThat(existing.getTotalCopies()).isEqualTo(5);
+        assertThat(existing.getTitle()).isEqualTo("Old");
+        assertThat(existing.getAuthor()).isEqualTo("Old Author");
+    }
+
+    @Test
+    @DisplayName("update - same totalCopies - no-op arithmetic, available unchanged")
+    void update_totalCopiesSameValue() {
+        existing.setAvailableCopies(2);
+        when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookService.update(uuid, new UpdateBookRequest(null, null, 5));
+
+        assertThat(existing.getTotalCopies()).isEqualTo(5);
+        assertThat(existing.getAvailableCopies()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("update - shrink with no active loans - allowed, available decreases")
+    void update_shrinkNoActiveLoans() {
+        existing.setTotalCopies(10);
+        existing.setAvailableCopies(10);
+        when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookService.update(uuid, new UpdateBookRequest(null, null, 5));
+
+        assertThat(existing.getTotalCopies()).isEqualTo(5);
+        assertThat(existing.getAvailableCopies()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("update - negative delta when activeLoans > 0 - throws, never saves")
+    void update_shrinkActiveLoans_throws() {
+        existing.setTotalCopies(10);
+        existing.setAvailableCopies(2);
+        when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> bookService.update(uuid, new UpdateBookRequest(null, null, 5)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("8")
+                .hasMessageContaining("5");
+
+        verify(bookRepository, never()).save(any());
+        assertThat(existing.getTotalCopies()).isEqualTo(10);
+        assertThat(existing.getAvailableCopies()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("update - after borrow decremented available - growing total preserves loan invariant")
+    void update_growAfterBorrow() {
+        existing.setTotalCopies(1);
+        existing.setAvailableCopies(0);
+        when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookService.update(uuid, new UpdateBookRequest(null, null, 5));
+
+        assertThat(existing.getTotalCopies()).isEqualTo(5);
+        assertThat(existing.getAvailableCopies()).isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("delete - soft delete sets deletedAt and saves")
     void delete_softDelete() {
         when(bookRepository.findByUuid(uuid)).thenReturn(Optional.of(existing));

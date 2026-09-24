@@ -24,10 +24,10 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        seedUser(adminUsername, adminPassword, "ADMIN", null);
+        seedUser(adminUsername, adminPassword, "ADMIN");
     }
 
-    private void seedUser(String username, String password, String role, Long memberId) {
+    private void seedUser(String username, String password, String role) {
         if (userRepository.findByUsernameAndDeletedAtIsNull(username).isPresent()) {
             return;
         }
@@ -35,7 +35,6 @@ public class DataSeeder implements CommandLineRunner {
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setRole(role);
-        user.setMemberId(memberId);
         userRepository.save(user);
         log.info("Seeded user: {} ({})", username, role);
     }

@@ -76,7 +76,7 @@ class MemberServiceTest {
         User savedUser = userCaptor.getValue();
         assertThat(savedUser.getUsername()).isEqualTo("bob@example.com");
         assertThat(savedUser.getRole()).isEqualTo("MEMBER");
-        assertThat(savedUser.getMemberId()).isEqualTo(42L);
+        assertThat(savedUser.getMember().getId()).isEqualTo(42L);
         assertThat(savedUser.getPasswordHash()).isEqualTo("hashed");
 
         assertThat(resp.email()).isEqualTo("bob@example.com");

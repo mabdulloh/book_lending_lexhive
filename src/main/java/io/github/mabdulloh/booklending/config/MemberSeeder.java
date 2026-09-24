@@ -52,7 +52,7 @@ public class MemberSeeder implements CommandLineRunner {
         user.setUsername(memberEmail);
         user.setPasswordHash(passwordEncoder.encode(memberPassword));
         user.setRole("MEMBER");
-        user.setMemberId(member.getId());
+        user.setMember(member);
         userRepository.save(user);
         log.info("Seeded user linked to member id={}", member.getId());
     }

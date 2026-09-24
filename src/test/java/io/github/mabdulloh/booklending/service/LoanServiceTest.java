@@ -4,20 +4,20 @@ import io.github.mabdulloh.booklending.config.BorrowingRulesConfig;
 import io.github.mabdulloh.booklending.domain.Book;
 import io.github.mabdulloh.booklending.domain.Loan;
 import io.github.mabdulloh.booklending.domain.Member;
+import io.github.mabdulloh.booklending.domain.User;
 import io.github.mabdulloh.booklending.dto.loan.BorrowRequest;
-import io.github.mabdulloh.booklending.exception.BookUnavailableException;
-import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
-import io.github.mabdulloh.booklending.exception.MaxActiveLoansExceededException;
-import io.github.mabdulloh.booklending.exception.MemberHasOverdueLoanException;
+import io.github.mabdulloh.booklending.exception.*;
 import io.github.mabdulloh.booklending.repository.LoanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -201,6 +201,105 @@ class LoanServiceTest {
     }
 
     @Test
+    @DisplayName("returnLoan - member owns loan - returns successfully")
+    void returnLoan_memberOwnsLoan() {
+        UUID loanUuid = UUID.randomUUID();
+        long memberInternalId = 42L;
+        member.setId(memberInternalId);
+
+        Loan loan = new Loan();
+        loan.setUuid(loanUuid);
+        loan.setBook(book);
+        loan.setMember(member);
+        loan.setBorrowedAt(Instant.now().minus(5, ChronoUnit.DAYS));
+        loan.setDueDate(Instant.now().plus(9, ChronoUnit.DAYS));
+
+        setAuth("member-owner", "ROLE_MEMBER");
+
+        User linkedUser = new User();
+        linkedUser.setId(99L);
+        linkedUser.setMember(member);
+        when(userRepository.findByUsernameAndDeletedAtIsNull("member-owner")).thenReturn(Optional.of(linkedUser));
+        when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
+
+        var resp = loanService.returnLoan(loanUuid);
+
+        assertThat(resp.returnedAt()).isNotNull();
+        assertThat(book.getAvailableCopies()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("returnLoan - member does not own loan - throws LoanOwnershipException")
+    void returnLoan_memberNotOwner() {
+        UUID loanUuid = UUID.randomUUID();
+        member.setId(42L);
+
+        Loan loan = new Loan();
+        loan.setUuid(loanUuid);
+        loan.setBook(book);
+        loan.setMember(member);
+        loan.setBorrowedAt(Instant.now());
+        loan.setDueDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+        setAuth("member-stranger", "ROLE_MEMBER");
+
+        User stranger = new User();
+        stranger.setId(100L);
+        stranger.setMember(null);
+        when(userRepository.findByUsernameAndDeletedAtIsNull("member-stranger")).thenReturn(Optional.of(stranger));
+        when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
+
+        assertThatThrownBy(() -> loanService.returnLoan(loanUuid))
+                .isInstanceOf(LoanOwnershipException.class);
+    }
+
+    @Test
+    @DisplayName("returnLoan - user not found in repo - treated as no owner")
+    void returnLoan_userNotFoundInRepo() {
+        UUID loanUuid = UUID.randomUUID();
+        member.setId(42L);
+
+        Loan loan = new Loan();
+        loan.setUuid(loanUuid);
+        loan.setBook(book);
+        loan.setMember(member);
+        loan.setBorrowedAt(Instant.now());
+        loan.setDueDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+        setAuth("orphan-user", "ROLE_MEMBER");
+
+        when(userRepository.findByUsernameAndDeletedAtIsNull("orphan-user")).thenReturn(Optional.empty());
+        when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
+
+        assertThatThrownBy(() -> loanService.returnLoan(loanUuid))
+                .isInstanceOf(LoanOwnershipException.class);
+    }
+
+    @Test
+    @DisplayName("returnLoan - admin bypasses ownership regardless of user.memberId")
+    void returnLoan_adminBypassesOwnership() {
+        UUID loanUuid = UUID.randomUUID();
+        member.setId(42L);
+
+        Loan loan = new Loan();
+        loan.setUuid(loanUuid);
+        loan.setBook(book);
+        loan.setMember(member);
+        loan.setBorrowedAt(Instant.now());
+        loan.setDueDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+        setAuth("admin", "ROLE_ADMIN");
+
+        when(loanRepository.findByUuid(loanUuid)).thenReturn(Optional.of(loan));
+
+        var resp = loanService.returnLoan(loanUuid);
+
+        assertThat(resp.returnedAt()).isNotNull();
+        assertThat(book.getAvailableCopies()).isEqualTo(3);
+        verify(userRepository, never()).findByUsernameAndDeletedAtIsNull(any());
+    }
+
+    @Test
     @DisplayName("listByMember - returns mapped loans")
     void listByMember_ok() {
         Loan loan = new Loan();
@@ -257,5 +356,11 @@ class LoanServiceTest {
 
         assertThatThrownBy(() -> loanService.validateCanBorrow(memberUuid))
                 .isInstanceOf(MemberHasOverdueLoanException.class);
+    }
+
+    private static void setAuth(String username, String role) {
+        var auth = new UsernamePasswordAuthenticationToken(
+                username, null, List.of(new SimpleGrantedAuthority(role)));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

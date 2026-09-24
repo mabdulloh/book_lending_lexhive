@@ -36,6 +36,7 @@ public class LoanServiceImpl implements LoanService, BorrowingRulesService {
     private final MemberService memberService;
     private final UserRepository userRepository;
     private final BorrowingRulesConfig rulesConfig;
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
 
     @Override
     @Transactional
@@ -132,7 +133,7 @@ public class LoanServiceImpl implements LoanService, BorrowingRulesService {
         if (auth == null) return false;
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+                .anyMatch(ROLE_ADMIN::equals);
     }
 
     private String currentUsername() {
@@ -144,7 +145,7 @@ public class LoanServiceImpl implements LoanService, BorrowingRulesService {
         String username = currentUsername();
         if (username == null) return false;
         return userRepository.findByUsernameAndDeletedAtIsNull(username)
-                .map(u -> loan.getMember().getId().equals(u.getMemberId()))
+                .map(u -> loan.getMember().equals(u.getMember()))
                 .orElse(false);
     }
 }
