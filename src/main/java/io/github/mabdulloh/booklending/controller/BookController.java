@@ -67,7 +67,7 @@ public class BookController {
                               "isbn": "9780132350884",
                               "totalCopies": 5
                             }""")
-            @Valid @org.springframework.web.bind.annotation.RequestBody CreateBookRequest req) {
+            @Valid @RequestBody CreateBookRequest req) {
         BookResponse created = bookService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

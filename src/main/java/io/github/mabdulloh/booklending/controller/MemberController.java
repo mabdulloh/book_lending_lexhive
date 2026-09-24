@@ -60,7 +60,7 @@ public class MemberController {
                               "email": "jane@example.com",
                               "password": "secret123"
                             }""")
-            @Valid @org.springframework.web.bind.annotation.RequestBody CreateMemberRequest req) {
+            @Valid @RequestBody CreateMemberRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberService.create(req));
     }
 

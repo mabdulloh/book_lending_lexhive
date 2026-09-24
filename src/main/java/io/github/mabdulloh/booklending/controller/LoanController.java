@@ -60,7 +60,7 @@ public class LoanController {
                               "bookUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                               "memberUuid": "4fa85f64-5717-4562-b3fc-2c963f66afa6"
                             }""")
-            @Valid @org.springframework.web.bind.annotation.RequestBody BorrowRequest req) {
+            @Valid @RequestBody BorrowRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(loanService.borrow(req));
     }
 
