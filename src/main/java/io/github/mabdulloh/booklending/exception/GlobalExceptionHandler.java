@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,13 +19,13 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), null);
     }
 
-    @ExceptionHandler({DuplicateIsbnException.class, DuplicateEmailException.class})
-    public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
         return error(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
 
-    @ExceptionHandler({MaxActiveLoansExceededException.class, MemberHasOverdueLoanException.class, BookUnavailableException.class})
-    public ResponseEntity<Map<String, Object>> handleUnprocessable(RuntimeException ex) {
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessRule(BusinessRuleException ex) {
         return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), null);
     }
 
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message, Object fieldErrors) {
-        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", Instant.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());

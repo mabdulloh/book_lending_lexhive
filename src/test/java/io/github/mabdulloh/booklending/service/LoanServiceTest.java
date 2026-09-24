@@ -62,9 +62,7 @@ class LoanServiceTest {
 
         loanService = new LoanServiceImpl(loanRepository, bookService, memberService, userRepository, rules);
 
-        var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                "admin", null, java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN")));
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+        setAuth("admin", "ROLE_ADMIN");
 
         bookUuid = UUID.randomUUID();
         memberUuid = UUID.randomUUID();
@@ -111,7 +109,7 @@ class LoanServiceTest {
         when(loanRepository.countActiveByMemberUuid(memberUuid)).thenReturn(3L);
 
         assertThatThrownBy(() -> loanService.borrow(new BorrowRequest(bookUuid, memberUuid)))
-                .isInstanceOf(MaxActiveLoansExceededException.class);
+                .isInstanceOf(BusinessRuleException.class);
 
         verify(loanRepository, never()).save(any());
         assertThat(book.getAvailableCopies()).isEqualTo(2);
@@ -127,7 +125,7 @@ class LoanServiceTest {
                 .thenReturn(List.of(new Loan()));
 
         assertThatThrownBy(() -> loanService.borrow(new BorrowRequest(bookUuid, memberUuid)))
-                .isInstanceOf(MemberHasOverdueLoanException.class);
+                .isInstanceOf(BusinessRuleException.class);
 
         verify(loanRepository, never()).save(any());
     }
@@ -142,7 +140,7 @@ class LoanServiceTest {
         when(loanRepository.findOverdueByMember(eq(memberUuid), any())).thenReturn(List.of());
 
         assertThatThrownBy(() -> loanService.borrow(new BorrowRequest(bookUuid, memberUuid)))
-                .isInstanceOf(BookUnavailableException.class);
+                .isInstanceOf(BusinessRuleException.class);
 
         verify(loanRepository, never()).save(any());
     }
@@ -345,7 +343,7 @@ class LoanServiceTest {
         when(loanRepository.countActiveByMemberUuid(memberUuid)).thenReturn(3L);
 
         assertThatThrownBy(() -> loanService.validateCanBorrow(memberUuid))
-                .isInstanceOf(MaxActiveLoansExceededException.class);
+                .isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
@@ -355,7 +353,7 @@ class LoanServiceTest {
         when(loanRepository.findOverdueByMember(eq(memberUuid), any())).thenReturn(List.of(new Loan()));
 
         assertThatThrownBy(() -> loanService.validateCanBorrow(memberUuid))
-                .isInstanceOf(MemberHasOverdueLoanException.class);
+                .isInstanceOf(BusinessRuleException.class);
     }
 
     private static void setAuth(String username, String role) {

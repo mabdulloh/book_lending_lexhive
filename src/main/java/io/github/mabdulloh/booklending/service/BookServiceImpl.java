@@ -4,7 +4,7 @@ import io.github.mabdulloh.booklending.domain.Book;
 import io.github.mabdulloh.booklending.dto.book.BookResponse;
 import io.github.mabdulloh.booklending.dto.book.CreateBookRequest;
 import io.github.mabdulloh.booklending.dto.book.UpdateBookRequest;
-import io.github.mabdulloh.booklending.exception.DuplicateIsbnException;
+import io.github.mabdulloh.booklending.exception.ConflictException;
 import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
 import io.github.mabdulloh.booklending.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class BookServiceImpl implements BookService {
         log.info("Creating book isbn: {}", req.isbn());
         if (bookRepository.existsByIsbn(req.isbn())) {
             log.info("Book with isbn {} already exists", req.isbn());
-            throw new DuplicateIsbnException(req.isbn());
+            throw new ConflictException("ISBN already exists: " + req.isbn());
         }
         var book = new Book();
         book.setUuid(UUID.randomUUID());

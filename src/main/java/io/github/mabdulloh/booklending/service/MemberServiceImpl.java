@@ -4,7 +4,7 @@ import io.github.mabdulloh.booklending.domain.Member;
 import io.github.mabdulloh.booklending.domain.User;
 import io.github.mabdulloh.booklending.dto.member.CreateMemberRequest;
 import io.github.mabdulloh.booklending.dto.member.MemberResponse;
-import io.github.mabdulloh.booklending.exception.DuplicateEmailException;
+import io.github.mabdulloh.booklending.exception.ConflictException;
 import io.github.mabdulloh.booklending.exception.EntityNotFoundException;
 import io.github.mabdulloh.booklending.repository.MemberRepository;
 import io.github.mabdulloh.booklending.repository.UserRepository;
@@ -33,11 +33,11 @@ public class MemberServiceImpl implements MemberService {
     public MemberResponse create(CreateMemberRequest req) {
         if (memberRepository.existsByEmail(req.email())) {
             log.info("Duplicate member email: {}", req.email());
-            throw new DuplicateEmailException(req.email());
+            throw new ConflictException("Email already exists: " + req.email());
         }
         if (userRepository.findByUsername(req.email()).isPresent()) {
             log.info("Username already taken: {}", req.email());
-            throw new DuplicateEmailException(req.email());
+            throw new ConflictException("Email already exists: " + req.email());
         }
 
         Member member = new Member();

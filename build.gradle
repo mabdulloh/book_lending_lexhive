@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.1'
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'org.asciidoctor.jvm.convert' version '4.0.0'
     id 'jacoco'
 }
 
@@ -10,7 +9,6 @@ group = 'io.github.mabdulloh'
 version = '0.0.1-SNAPSHOT'
 
 configurations {
-    asciidoctorExtensions
     testRuntimeClasspath {
         resolutionStrategy.eachDependency { details ->
             if (details.requested.group == 'org.testcontainers') {
@@ -55,7 +53,6 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.48'
@@ -67,45 +64,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-core'
     testCompileOnly 'org.projectlombok:lombok:1.18.48'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.48'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor:3.0.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'api.version', '1.43'
-}
-
-tasks.register('copySnippets', Copy) {
-    from layout.buildDirectory.dir('generated-snippets')
-    into layout.projectDirectory.dir('src/docs/asciidoc/snippets')
-    doFirst {
-        delete layout.projectDirectory.dir('src/docs/asciidoc/snippets')
-    }
-}
-
-asciidoctor {
-    sourceDir = file("${projectDir}/src/docs/asciidoc")
-    sources {
-        include 'index.adoc'
-    }
-    outputDir = file("${buildDir}/docs/asciidoctor")
-    attributes([
-        revnumber: project.version,
-        revdate: new Date().format('yyyy-MM-dd'),
-        sourceHighlighter: 'highlightjs'
-    ])
-    dependsOn copySnippets
-}
-
-tasks.register('asciidoctorFull') {
-    dependsOn 'test', 'asciidoctor'
 }
 
 jacocoTestReport {

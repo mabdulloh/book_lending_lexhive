@@ -11,4 +11,5 @@ public interface LoanService {
     LoanResponse returnLoan(UUID loanUuid);
     List<LoanResponse> listByMember(UUID memberUuid);
     List<LoanResponse> listOverdue();
+    void validateCanBorrow(UUID memberUuid);
 }
